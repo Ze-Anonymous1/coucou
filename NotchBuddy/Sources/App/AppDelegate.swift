@@ -9,8 +9,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Ignore SIGPIPE — prevents crash when nb-hook closes socket before we write response
         signal(SIGPIPE, SIG_IGN)
+        #if !REDLIGHT_PREVIEW
         // Warm up Keychain cache on main thread BEFORE any poller or view touches it
         _ = KeychainStore.shared
+        #endif
         NSApp.setActivationPolicy(.accessory)
         setupMenuBarItem()
         setupIsland()
@@ -27,7 +29,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         button.image?.isTemplate = true
 
         let menu = NSMenu()
-        menu.addItem(withTitle: "Open Coucou", action: #selector(openIsland), keyEquivalent: "")
+        let openItem = menu.addItem(withTitle: "Open Coucou", action: #selector(openIsland), keyEquivalent: "")
+        openItem.target = self
+        let previewItem = menu.addItem(withTitle: "Preview Red Light Companion…", action: #selector(openRedLightPreview), keyEquivalent: "")
+        previewItem.target = self
         menu.addItem(.separator())
         menu.addItem(withTitle: "Settings…", action: #selector(openSettings), keyEquivalent: ",")
         menu.addItem(.separator())
@@ -40,6 +45,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openIsland() {
         islandController?.expand(to: .overview)
+    }
+
+    @objc private func openRedLightPreview() {
+        AppState.shared.isPinned = true
+        islandController?.expand(to: .redLightPreview)
     }
 
     private var settingsWindow: NSWindow?
@@ -63,6 +73,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         islandController = IslandWindowController()
         islandController?.showWindow(nil)
         islandController?.fsm.launch()
+        #if !REDLIGHT_PREVIEW
         HookServer.shared.start()
         N8nPoller.shared.start()
         VercelPoller.shared.start()
@@ -71,6 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         StripePoller.shared.start()
         CalcomPoller.shared.start()
         NotionPoller.shared.start()
+        #endif
         NotificationCenter.default.addObserver(self, selector: #selector(openSettings),
                                                name: .openFullSettings, object: nil)
     }

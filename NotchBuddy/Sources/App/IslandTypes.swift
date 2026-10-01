@@ -10,7 +10,7 @@ enum IslandMode: String, CaseIterable {
 
 enum IslandView: String, CaseIterable {
     case overview, empty, approval, question, error, finished
-    case confused, upload, uploading, choose, mail, prompt
+    case confused, upload, uploading, choose, mail, prompt, redLightPreview
     case searching, result, note, settings, greeting
 }
 
@@ -107,6 +107,8 @@ enum IslandConst {
         .settings:  ViewLayout(height: 160, botX: 54,  botY: nil, botDiameter: 46, agentMode: .none),
         // Greeting: bot drawn by GreetingCanvasView; no BotPlacement needed
         .greeting:  ViewLayout(height: 150, botX: 320, botY: 90,  botDiameter: 0,  agentMode: .none),
+        // The Red Light preview is a static, self-contained prototype view.
+        .redLightPreview: ViewLayout(height: 220, botX: 40, botY: 110, botDiameter: 0, agentMode: .none),
     ]
 
     // Project colors — keyed by lowercase display name or slug
