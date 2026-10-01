@@ -63,6 +63,11 @@ jobs:
         run: |
           APP="$RUNNER_TEMP/preview-derived-data/Build/Products/Debug/Coucou Red Light Preview.app"
           test -d "$APP"
+          PLIST="$APP/Contents/Info.plist"
+          plutil -replace CFBundleIdentifier -string dev.redlight.coucou-preview "$PLIST"
+          plutil -replace CFBundleName -string 'Coucou Red Light Preview' "$PLIST"
+          plutil -replace CFBundleDisplayName -string 'Coucou Red Light Preview' "$PLIST"
+          test "$(plutil -extract CFBundleIdentifier raw "$PLIST")" = dev.redlight.coucou-preview
           ditto -c -k --sequesterRsrc --keepParent "$APP" "$RUNNER_TEMP/Coucou-Red-Light-Preview.zip"
 
       - uses: actions/upload-artifact@v4

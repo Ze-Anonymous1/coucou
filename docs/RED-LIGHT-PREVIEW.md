@@ -37,7 +37,16 @@ xcodebuild -scheme NotchBuddy -configuration Debug build \
 
 Or, from the fork's GitHub page, open **Actions → Build → Run workflow**. The run's **Coucou-Red-Light-Preview-macOS** artifact contains the zipped app and is retained for seven days.
 
-The compile condition disables live hooks and integration pollers. The identifier/name overrides keep a local test build separate from an installed Coucou app. Locate the built `.app` under Xcode's DerivedData `Build/Products/Debug` folder and launch it directly; do not copy it over `/Applications/Coucou.app`.
+The compile condition disables live hooks and integration pollers. The artifact build also changes the app bundle identifier and display name after Xcode generates the plist, keeping it separate from an installed Coucou app. For a local build, set those three plist keys on the resulting app before launch:
+
+```sh
+APP="$(find "$HOME/Library/Developer/Xcode/DerivedData" -path '*/Build/Products/Debug/Coucou Red Light Preview.app' -print -quit)"
+plutil -replace CFBundleIdentifier -string dev.redlight.coucou-preview "$APP/Contents/Info.plist"
+plutil -replace CFBundleName -string 'Coucou Red Light Preview' "$APP/Contents/Info.plist"
+plutil -replace CFBundleDisplayName -string 'Coucou Red Light Preview' "$APP/Contents/Info.plist"
+```
+
+Launch the app from DerivedData or Downloads directly; do not copy it over `/Applications/Coucou.app`.
 
 ## Verification
 
