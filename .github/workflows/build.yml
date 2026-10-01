@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,3 +31,43 @@ jobs:
             build \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO
+
+  preview-app:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: cd NotchBuddy && xcodegen
+
+      - name: Build isolated Red Light preview app
+        run: |
+          xcodebuild \
+            -project NotchBuddy/NotchBuddy.xcodeproj \
+            -scheme NotchBuddy \
+            -configuration Debug \
+            -derivedDataPath "$RUNNER_TEMP/preview-derived-data" \
+            build \
+            'SWIFT_ACTIVE_COMPILATION_CONDITIONS=DEBUG REDLIGHT_PREVIEW' \
+            PRODUCT_BUNDLE_IDENTIFIER=dev.redlight.coucou-preview \
+            'PRODUCT_NAME=Coucou Red Light Preview' \
+            'INFOPLIST_KEY_CFBundleDisplayName=Coucou Red Light Preview' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO
+
+      - name: Package preview app
+        run: |
+          APP="$RUNNER_TEMP/preview-derived-data/Build/Products/Debug/Coucou Red Light Preview.app"
+          test -d "$APP"
+          ditto -c -k --sequesterRsrc --keepParent "$APP" "$RUNNER_TEMP/Coucou-Red-Light-Preview.zip"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Coucou-Red-Light-Preview-macOS
+          path: ${{ runner.temp }}/Coucou-Red-Light-Preview.zip
+          if-no-files-found: error
+          retention-days: 7
